@@ -1,22 +1,23 @@
-import React, { useState } from "react"
-import { NavigationContainer } from "@react-navigation/native"
-import { createStackNavigator } from "@react-navigation/stack"
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
-import { createDrawerNavigator } from "@react-navigation/drawer"
-import { Ionicons } from "@expo/vector-icons"
+import React, { useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { Ionicons } from "@expo/vector-icons";
 
-import HomeScreen from "./screens/HomeSreen"
-import DetailScreen from "./screens/DetailsScreen"
-import BookingScreen from "./screens/BookingScreen"
-import ProfileScreen from "./screens/ProfileScreen"
-import LoginScreen from "./screens/LoginScreen"
-import ServiceScreen from "./screens/ServiceScreen"
-import { GestureHandlerRootView } from "react-native-gesture-handler"
+import HomeScreen from "./screens/HomeSreen"; 
+import DetailScreen from "./screens/DetailsScreen";
+import BookingScreen from "./screens/BookingScreen";
+import ProfileScreen from "./screens/ProfileScreen";
+import LoginScreen from "./screens/LoginScreen";
+import ServiceScreen from "./screens/ServiceScreen";
+import TeamScreen from "./screens/TeamScreen";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import RegisterScreen from "./screens/RegisterScreen"
 
-const Stack = createStackNavigator()
-const Tab = createBottomTabNavigator()
-const Drawer = createDrawerNavigator()
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+const Drawer = createDrawerNavigator();
 
 const HomeStack = () => {
   return (
@@ -37,8 +38,8 @@ const HomeStack = () => {
         options={{ title: "Đăng ký" }}
       />
     </Stack.Navigator>
-  )
-}
+  );
+};
 
 const AuthStack = () => {
   return (
@@ -97,10 +98,22 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
 const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
   return (
     <Drawer.Navigator>
-      <Drawer.Screen name="Home">
-        {() => <BottomTabs isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
+      <Drawer.Screen 
+        name="Home" 
+        options={{ title: "Trang chủ" }}
+      >
+        {() => <BottomTabs isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>}
       </Drawer.Screen>
-      <Drawer.Screen name="Service" component={ServiceScreen} />
+      <Drawer.Screen 
+        name="ServiceGuide" 
+        component={ServiceScreen} 
+        options={{ title: "Cẩm nang tiêm phòng" }} 
+      />
+      <Drawer.Screen 
+        name="Team" 
+        component={TeamScreen} 
+        options={{ title: "Đội ngũ chuyên gia" }} 
+      />
     </Drawer.Navigator>
   );
 };
@@ -109,7 +122,7 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
         <DrawerNavigator isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       </NavigationContainer>
@@ -117,4 +130,4 @@ const App = () => {
   );
 };
 
-export default App
+export default App;
