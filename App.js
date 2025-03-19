@@ -12,6 +12,7 @@ import ProfileScreen from "./screens/ProfileScreen"
 import LoginScreen from "./screens/LoginScreen"
 import ServiceScreen from "./screens/ServiceScreen"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
+import RegisterScreen from "./screens/RegisterScreen"
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -30,11 +31,33 @@ const HomeStack = () => {
         component={DetailScreen}
         options={{ title: "Chi tiết" }}
       />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ title: "Đăng ký" }}
+      />
     </Stack.Navigator>
   )
 }
 
-const BottomTabs = ({ isLoggedIn }) => {
+const AuthStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }} // Ẩn header nếu không cần thiết
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ title: "Đăng ký" }} // Hiển thị tiêu đề "Đăng ký"
+      />
+    </Stack.Navigator>
+  );
+};
+
+const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -45,8 +68,8 @@ const BottomTabs = ({ isLoggedIn }) => {
             Booking: "calendar",
             Profile: "person",
             Login: "log-in",
-          }
-          return <Ionicons name={icons[route.name]} size={size} color={color} />
+          };
+          return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
       })}
     >
@@ -57,35 +80,41 @@ const BottomTabs = ({ isLoggedIn }) => {
       />
       <Tab.Screen name="Booking" component={BookingScreen} />
       {isLoggedIn ? (
-        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen
+          name="Profile"
+          children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
+        />
       ) : (
-        <Tab.Screen name="Login" component={LoginScreen} />
+        <Tab.Screen
+          name="Login"
+          children={() => <AuthStack />} // Sử dụng AuthStack thay vì LoginScreen
+        />
       )}
     </Tab.Navigator>
-  )
-}
+  );
+};
 
-const DrawerNavigator = ({ isLoggedIn }) => {
+const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
   return (
     <Drawer.Navigator>
       <Drawer.Screen name="Home">
-        {() => <BottomTabs isLoggedIn={isLoggedIn} />}
+        {() => <BottomTabs isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
       </Drawer.Screen>
       <Drawer.Screen name="Service" component={ServiceScreen} />
     </Drawer.Navigator>
-  )
-}
+  );
+};
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <GestureHandlerRootView>
       <NavigationContainer>
-        <DrawerNavigator isLoggedIn={isLoggedIn} />
+        <DrawerNavigator isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       </NavigationContainer>
     </GestureHandlerRootView>
-  )
-}
+  );
+};
 
 export default App
