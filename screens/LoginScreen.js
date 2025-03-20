@@ -55,7 +55,6 @@ const LoginScreen = ({ navigation, setIsLoggedIn }) => {
     setLoading(true);
     try {
       const response = await apiConfig.login(email, password);
-<<<<<<< HEAD
       const token = response.token;
 
       // Lưu token vào AsyncStorage
@@ -78,9 +77,7 @@ const LoginScreen = ({ navigation, setIsLoggedIn }) => {
       ]);
 
       // Cập nhật trạng thái đăng nhập
-=======
       await AsyncStorage.setItem("token", response.token);
->>>>>>> 3d33f86c148b75145ad9aa3654c6b8c8c8e685a2
       setIsLoggedIn(true);
 
       Alert.alert("Thành công", "Đăng nhập thành công!", [
@@ -139,15 +136,6 @@ const LoginScreen = ({ navigation, setIsLoggedIn }) => {
           </TouchableOpacity>
         </Animated.View>
       )}
-
-<<<<<<< HEAD
-      <Text
-        style={styles.link}
-        onPress={() => navigation.navigate("Register")}
-      >
-        Chưa có tài khoản? Đăng ký
-      </Text>
-=======
       <Animated.View entering={FadeInUp.delay(500)} style={styles.linkContainer}>
         <Text style={styles.linkText}>
           Chưa có tài khoản?{" "}
@@ -159,7 +147,6 @@ const LoginScreen = ({ navigation, setIsLoggedIn }) => {
           </Text>
         </Text>
       </Animated.View>
->>>>>>> 3d33f86c148b75145ad9aa3654c6b8c8c8e685a2
     </View>
   );
 };
