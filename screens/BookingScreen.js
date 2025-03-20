@@ -1,10 +1,15 @@
-import React, { useEffect, useState } from "react"
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native"
-import apiConfig from "../config/apiConfig"
-import { FlatList } from "react-native-gesture-handler"
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity } from "react-native";
+import apiConfig from "../config/apiConfig";
 
-const BookingScreen = () => {
-  const [appointments, setAppointments] = useState([
+const BookingScreen = ({ route, navigation }) => {
+  const { vaccineId } = route.params || {}; // Get vaccineId from navigation params
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Placeholder static data (remove or replace with real API data)
+  const staticAppointments = [
     {
       childId: "64f1b2c8e4b0f5a3d4f5e6a7",
       vaccineId: "67d988624d312ec0ddfad3d3",
@@ -20,32 +25,66 @@ const BookingScreen = () => {
       vaccineId: "67d988624d312ec0ddfad3d1",
       date: "2023-10-15T09:00:00Z",
     },
-  ])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  ];
 
-  // const fetchAppointments = async () => {
-  //   try {
-  //     const data = await apiConfig.getAppointments()
-  //     if (!Array.isArray(data)) throw new Error("Dữ liệu lịch hẹn không hợp lệ")
+  // Uncomment and implement this if you have an API endpoint for fetching appointments
+  /*
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      const data = await apiConfig.getAppointments(); // Replace with your actual API call
+      if (!Array.isArray(data)) throw new Error("Dữ liệu lịch hẹn không hợp lệ");
+      setAppointments(data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
-  //     setAppointments(data)
-  //     setLoading(false)
-  //   } catch (err) {
-  //     console.error("Error fetching vaccines:", err)
-  //     setError(err.message)
-  //     setLoading(false)
-  //   }
-  // }
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+  */
 
-  // useEffect(() => {
-  //   fetchAppointments()
-  // }, [])
+  // For now, use static data and append the new vaccineId if provided
+  useEffect(() => {
+    setAppointments(staticAppointments); // Load static data initially
+    if (vaccineId) {
+      // Simulate adding a new appointment (replace with actual booking logic later)
+      const newAppointment = {
+        childId: "64f1b2c8e4b0f5a3d4f5e6a7", // Placeholder, replace with real child ID
+        vaccineId: vaccineId,
+        date: new Date().toISOString(), // Current date as placeholder
+      };
+      setAppointments((prev) => [...prev, newAppointment]);
+    }
+  }, [vaccineId]);
+
+  const renderAppointmentItem = ({ item }) => (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <Text style={styles.label}>Vaccine ID</Text>
+        <Text style={styles.label}>Trẻ ID</Text>
+        <Text style={styles.label}>Thời gian tiêm</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.value}>{item.vaccineId}</Text>
+        <Text style={styles.value}>{item.childId}</Text>
+        <Text style={styles.value}>{new Date(item.date).toLocaleString()}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Đặt Lịch Tiêm Phòng</Text>
+      {vaccineId && (
+        <Text style={styles.subtitle}>Đặt lịch cho Vaccine ID: {vaccineId}</Text>
+      )}
       {loading ? (
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#FF6F61" />
       ) : error ? (
         <Text style={styles.error}>{error}</Text>
       ) : (
@@ -53,45 +92,65 @@ const BookingScreen = () => {
           ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           data={appointments}
           keyExtractor={(item) => `${item.childId}-${item.vaccineId}`}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.row}>
-                <Text style={styles.label}>Vaccine ID</Text>
-                <Text style={styles.label}>Trẻ ID</Text>
-                <Text style={styles.label}>Thời gian tiêm</Text>
-              </View>
-
-              <View style={styles.row}>
-                <Text style={styles.value}>{item.vaccineId}</Text>
-                <Text style={styles.value}>{item.childId}</Text>
-                <Text style={styles.value}>
-                  {new Date(item.date).toLocaleString()}
-                </Text>
-              </View>
-            </View>
-          )}
+          renderItem={renderAppointmentItem}
+          ListEmptyComponent={<Text>Chưa có lịch hẹn nào.</Text>}
         />
       )}
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
-    padding: 8
+    flex: 1,
+    padding: 8,
+    backgroundColor: '#FFF5F1', // Match theme from HomeScreen/VacxinList
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FF6F61',
+    textAlign: 'center',
+    marginVertical: 16,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
   },
   card: {
-    flexDirection: "row",
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderWidth: 2,
+    borderColor: '#FFD1DC',
     padding: 24,
-    justifyContent: "space-between",
-    borderRadius: 5
+    borderRadius: 20,
+    elevation: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FF6F61',
+    flex: 1,
+    textAlign: 'center',
   },
   value: {
-    color: "gray",
+    fontSize: 14,
+    color: '#666',
+    flex: 1,
+    textAlign: 'center',
   },
-})
+  error: {
+    fontSize: 16,
+    color: '#FF6F61',
+    textAlign: 'center',
+    marginVertical: 16,
+  },
+});
 
-export default BookingScreen
+export default BookingScreen;

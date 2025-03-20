@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { 
-  FadeInDown, 
-  FadeInUp, 
-  useAnimatedStyle, 
-  useSharedValue, 
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
@@ -68,22 +68,25 @@ const TeamScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <Animated.View style={[styles.header, headerAnimatedStyle]}>
-        <Text style={styles.headerTitle}>Đội Ngũ Chuyên Gia</Text>
-        <Text style={styles.headerSubtitle}>Gặp gỡ các bác sĩ và y tá tận tâm của chúng tôi</Text>
+      <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Đội Ngũ Chuyên Gia</Text>
+          <Text style={styles.headerSubtitle}>Gặp gỡ các bác sĩ và y tá tận tâm của chúng tôi</Text>
+          <TouchableOpacity style={styles.searchButton}>
+            <MaterialIcons name="info" size={24} color="#fff" />
+            <Text style={styles.searchButtonText}>Tìm hiểu thêm</Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
       {/* Content */}
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         <Animated.View style={[styles.contentContainer, contentAnimatedStyle]}>
           {/* Welcome Card */}
-          <Animated.View 
-            entering={FadeInDown.duration(600)}
-            style={styles.welcomeCard}
-          >
+          <Animated.View entering={FadeInDown.duration(600)} style={styles.welcomeCard}>
             <Animated.View style={[styles.imageContainer, imageAnimatedStyle]}>
               <Image
                 source={{ uri: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2' }} // Đội ngũ y tế
@@ -96,37 +99,27 @@ const TeamScreen = () => {
             </Text>
           </Animated.View>
 
-          {/* Team Introduction */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Về chúng tôi</Text>
-            <Text style={styles.sectionText}>
-              Đội ngũ của chúng tôi bao gồm các chuyên gia được đào tạo bài bản, cam kết mang đến dịch vụ y tế chất lượng cao, an toàn và thân thiện với trẻ em.
-            </Text>
-          </View>
-
           {/* Team Members */}
           {teamMembers.map((member, index) => (
-            <Animated.View 
+            <Animated.View
               key={member.id}
               entering={FadeInUp.delay(index * 200)}
               style={styles.memberCard}
             >
-              <View style={styles.memberImageContainer}>
-                <Image
-                  source={{ uri: member.image }}
-                  style={styles.memberImage}
-                />
-              </View>
+              <Image
+                source={{ uri: member.image }}
+                style={styles.memberImage}
+                resizeMode="cover"
+              />
               <View style={styles.memberContent}>
                 <Text style={styles.memberName}>{member.name}</Text>
                 <Text style={styles.memberRole}>{member.role}</Text>
                 <Text style={styles.memberExperience}>{member.experience}</Text>
                 <View style={styles.specialtiesContainer}>
                   {member.specialties.map((specialty, idx) => (
-                    <View key={idx} style={styles.specialtyItem}>
-                      <MaterialIcons name="check-circle" size={16} color="#4CAF50" />
-                      <Text style={styles.specialtyText}>{specialty}</Text>
-                    </View>
+                    <Text key={idx} style={styles.specialtyText}>
+                      • {specialty}
+                    </Text>
                   ))}
                 </View>
               </View>
@@ -134,20 +127,20 @@ const TeamScreen = () => {
           ))}
 
           {/* Contact Section */}
-          <View style={styles.contactSection}>
+          <Animated.View entering={FadeInUp.delay(teamMembers.length * 200)} style={styles.contactSection}>
             <Text style={styles.contactTitle}>Liên hệ với chúng tôi</Text>
             <Text style={styles.contactText}>
               Nếu bạn cần tư vấn hoặc đặt lịch hẹn, hãy liên hệ qua:
             </Text>
             <View style={styles.contactInfo}>
-              <MaterialIcons name="phone" size={20} color="#007AFF" />
+              <MaterialIcons name="phone" size={20} color="#FF6F61" />
               <Text style={styles.contactDetail}>Hotline: 1900 1234</Text>
             </View>
             <View style={styles.contactInfo}>
-              <MaterialIcons name="email" size={20} color="#007AFF" />
+              <MaterialIcons name="email" size={20} color="#FF6F61" />
               <Text style={styles.contactDetail}>Email: support@tiemphongtreem.vn</Text>
             </View>
-          </View>
+          </Animated.View>
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
@@ -157,146 +150,163 @@ const TeamScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFF5F1', // Soft pastel background like VacxinList
   },
-  header: {
+  headerContainer: {
+    backgroundColor: '#FF9AA2', // Warm, playful pinkish-red
     padding: 20,
-    backgroundColor: '#fff',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 6,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  headerContent: {
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#1A3C34',
+    color: '#fff',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 8,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFB3BA', // Lighter pink for contrast
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    gap: 10,
+    elevation: 2,
+  },
+  searchButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   contentContainer: {
-    gap: 20,
+    gap: 16, // Consistent spacing like VacxinList
   },
   welcomeCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#FFD1DC', // Soft pink border
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowRadius: 5,
   },
   imageContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   welcomeImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 12,
+    height: 180, // Slightly smaller than original
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#FF9AA2', // Matching header color
   },
   welcomeTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#1A3C34',
+    color: '#FF6F61', // Bright coral like VacxinList
     textAlign: 'center',
+    marginBottom: 8,
   },
   welcomeText: {
-    fontSize: 15,
-    color: '#555',
-    marginTop: 10,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  sectionText: {
     fontSize: 14,
     color: '#666',
-    lineHeight: 20,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   memberCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    elevation: 3,
-    padding: 16,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  memberImageContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    overflow: 'hidden',
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#FFD1DC', // Soft pink border
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   memberImage: {
-    width: '100%',
-    height: '100%',
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FF9AA2', // Matching header color
   },
   memberContent: {
     flex: 1,
   },
   memberName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FF6F61', // Bright coral
+    marginBottom: 4,
   },
   memberRole: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginTop: 4,
+    fontSize: 12,
+    color: '#FFB3BA', // Lighter pink like price in VacxinList
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   memberExperience: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
-    marginTop: 4,
+    marginBottom: 6,
+    lineHeight: 16,
   },
   specialtiesContainer: {
-    marginTop: 8,
-    gap: 6,
-  },
-  specialtyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   specialtyText: {
-    fontSize: 14,
-    color: '#444',
+    fontSize: 12,
+    color: '#888',
+    fontWeight: '500',
   },
   contactSection: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 15,
     padding: 16,
-    elevation: 2,
+    borderWidth: 2,
+    borderColor: '#FFD1DC', // Soft pink border
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   contactTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    fontWeight: '700',
+    color: '#FF6F61', // Bright coral
+    marginBottom: 8,
   },
   contactText: {
     fontSize: 14,
@@ -311,7 +321,8 @@ const styles = StyleSheet.create({
   },
   contactDetail: {
     fontSize: 14,
-    color: '#007AFF',
+    color: '#FF6F61', // Bright coral for consistency
+    fontWeight: '500',
   },
 });
 
