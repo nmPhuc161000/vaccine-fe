@@ -17,6 +17,7 @@ import RegisterScreen from "./screens/RegisterScreen"
 import { useNavigation } from "@react-navigation/native";
 import UpdateChildProfileScreen from "./screens/UpdateChildProfileScreen";
 import VacxinList from "./screens/VacxinList"
+import AddBookingScreen from "./screens/AddBookingScreen";
 
 
 const Stack = createStackNavigator();
@@ -49,6 +50,11 @@ const HomeStack = () => {
         name="UpdateChildProfile"
         component={UpdateChildProfileScreen}
         options={{ title: "Cập nhật hồ sơ trẻ em" }}
+      />
+      <Stack.Screen
+        name="AddBooking"
+        component={AddBookingScreen}
+        options={{ title: "Đặt lịch" }}
       />
     </Stack.Navigator>
   );

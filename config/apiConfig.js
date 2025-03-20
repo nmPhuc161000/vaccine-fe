@@ -107,6 +107,18 @@ const apiConfig = {
       throw new Error(`Đăng ký thất bại: ${errorMessage}`);
     }
   },
+  // Lấy danh sách trẻ em
+  async getChildren() {
+    try {
+      const response = await apiClient.get("/api/children/get-children");
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.msg || error.message || "Lỗi không xác định";
+      console.error("Error in getChildren:", errorMessage);
+      throw new Error(`Không thể tải danh sách trẻ em: ${errorMessage}`);
+    }
+  },
 
   // Thêm trẻ em
   async addChild(name, birthDate, gender, medicalHistory) {
