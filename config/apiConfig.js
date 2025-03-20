@@ -1,61 +1,114 @@
-import axios from 'axios';
+import axios from "axios"
 
 const apiClient = axios.create({
-    baseURL: "https://be-vaccine.vercel.app",
-    timeout: 10000, // Thời gian timeout 10 giây
-});
-console.log(apiClient);
+  baseURL: "https://be-vaccine.vercel.app",
+  timeout: 10000, // Thời gian timeout 10 giây
+})
+console.log(apiClient)
 
 const apiConfig = {
-    // Lấy tất cả vaccine
-    async getVaccines() {
-        try {
-            const response = await apiClient.get('/api/vaccines/get-vaccines');
-            return response.data;
-        } catch (error) {
-            console.error('Error details:', error.response || error.message);
-            throw new Error('Không thể tải dữ liệu vaccine: ' + error.message);
-        }
-    },
+  // Lấy tất cả vaccine
+  async getVaccines() {
+    try {
+      const response = await apiClient.get("/api/vaccines/get-vaccines")
+      return response.data
+    } catch (error) {
+      console.error("Error details:", error.response || error.message)
+      throw new Error("Không thể tải dữ liệu vaccine: " + error.message)
+    }
+  },
 
-    // Lấy chi tiết vaccine theo id
-    async getVaccineById(id) {
-        try {
-            const response = await apiClient.get(`/api/vaccines/get-vaccine/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error('Error details:', error.response || error.message);
-            throw new Error('Không thể tải chi tiết vaccine: ' + error.message);
-        }
-    },
+  // Lấy chi tiết vaccine theo id
+  async getVaccineById(id) {
+    try {
+      const response = await apiClient.get(`/api/vaccines/get-vaccine/${id}`)
+      return response.data
+    } catch (error) {
+      console.error("Error details:", error.response || error.message)
+      throw new Error("Không thể tải chi tiết vaccine: " + error.message)
+    }
+  },
 
-    //login
-    async login(email, password) {
-        try {
-            const response = await apiClient.post('/api/auth/login', {
-                email,
-                password,
-            });
-            return response.data; // Trả về token
-        } catch (error) {
-            console.error('Error details:', error.response || error.message);
-            throw new Error('Đăng nhập thất bại: ' + (error.response?.data.msg || error.message));
-        }
-    },
-    //register
-    async register(name, email, password) {
-        try {
-            const response = await apiClient.post('/api/auth/register', {
-                name,
-                email,
-                password,
-            });
-            return response.data; // Trả về token
-        } catch (error) {
-            console.error('Error details:', error.response || error.message);
-            throw new Error('Đăng ký thất bại: ' + (error.response?.data.msg || error.message));
-        }
-    },
-};
+  //login
+  async login(email, password) {
+    try {
+      const response = await apiClient.post("/api/auth/login", {
+        email,
+        password,
+      })
+      return response.data // Trả về token
+    } catch (error) {
+      console.error("Error details:", error.response || error.message)
+      throw new Error(
+        "Đăng nhập thất bại: " + (error.response?.data.msg || error.message)
+      )
+    }
+  },
+  //register
+  async register(name, email, password) {
+    try {
+      const response = await apiClient.post("/api/auth/register", {
+        name,
+        email,
+        password,
+      })
+      return response.data // Trả về token
+    } catch (error) {
+      console.error("Error details:", error.response || error.message)
+      throw new Error(
+        "Đăng ký thất bại: " + (error.response?.data.msg || error.message)
+      )
+    }
+  },
+  //appointment
+  async getAppointments(token) {
+    try {
+      if (!token) {
+        throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại.")
+      }
 
-export default apiConfig;
+      const response = await apiClient.get(
+        "/api/appointments/get-appointments",
+        {
+          headers: {
+            "x-auth-token": `Bearer ${token}`,
+          },
+        }
+      )
+      return response.data
+    } catch (error) {
+      console.error("Error details:", error.response || error.message)
+      throw new Error(
+        "Không thể tải danh sách lịch hẹn: " +
+          (error.response?.data.message ||
+            error.response?.data.msg ||
+            error.message)
+      )
+    }
+  },
+  //book appointment
+  async bookAppointment(childId, vaccineId, date) {
+    try {
+      if (!childId || !vaccineId || !date) {
+        throw new Error("Thiếu thông tin")
+      }
+
+      const response = await apiClient.post(
+        "/api/appointments/book-appointment",
+        {
+          childId,
+          vaccineId,
+          date,
+        }
+      )
+      return response.data
+    } catch (error) {
+      console.error("Error details:", error.response || error.message)
+      throw new Error(
+        "Tạo lịch hẹn thất bại: " + (error.response?.data.msg || error.message)
+      )
+    }
+  },
+}
+
+export default apiConfig
