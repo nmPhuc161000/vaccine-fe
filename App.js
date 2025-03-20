@@ -14,12 +14,10 @@ import ServiceScreen from "./screens/ServiceScreen";
 import TeamScreen from "./screens/TeamScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import RegisterScreen from "./screens/RegisterScreen"
-<<<<<<< HEAD
-import { useNavigation } from "@react-navigation/native"; // Import useNavigation
+import { useNavigation } from "@react-navigation/native";
 import UpdateChildProfileScreen from "./screens/UpdateChildProfileScreen";
-=======
 import VacxinList from "./screens/VacxinList"
->>>>>>> f8afbf37dabcfa2db57058b3fe77982b29f16613
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -85,6 +83,22 @@ const AuthStack = ({ isLoggedIn, setIsLoggedIn }) => {
   );
 };
 
+const ProfileStack = ({ setIsLoggedIn }) => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="ProfileMain"
+        children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
+      />
+      <Stack.Screen
+        name="UpdateChildProfile"
+        component={UpdateChildProfileScreen}
+        options={{ title: "Cập nhật hồ sơ trẻ em" }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
   const navigation = useNavigation();
 
@@ -127,8 +141,7 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
       />
       <Tab.Screen
         name="Profile"
-        // Truyền setIsLoggedIn vào ProfileScreen
-        children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
+        children={() => <ProfileStack setIsLoggedIn={setIsLoggedIn} />} // Sử dụng ProfileStack thay vì ProfileScreen
       />
     </Tab.Navigator>
   );
@@ -153,20 +166,18 @@ const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
         component={TeamScreen}
         options={{ title: "Đội ngũ chuyên gia" }}
       />
-<<<<<<< HEAD
       <Drawer.Screen
         name="Auth"
         options={{ headerShown: false }}
       >
         {() => <AuthStack isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
       </Drawer.Screen>
-=======
+
        <Drawer.Screen 
         name="VacxinList" 
         component={VacxinList} 
         options={{ title: "Danh mục vắc xin" }} 
       />
->>>>>>> f8afbf37dabcfa2db57058b3fe77982b29f16613
     </Drawer.Navigator>
     
     

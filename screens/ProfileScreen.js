@@ -40,7 +40,7 @@ const ProfileScreen = ({ setIsLoggedIn }) => {
   };
 
   const handleUpdateChildProfile = () => {
-    navigation.navigate("UpdateChildProfile"); // Điều hướng đến màn hình cập nhật hồ sơ trẻ em
+    navigation.navigate("UpdateChildProfile"); // Điều hướng trực tiếp đến UpdateChildProfile
   };
 
   return (
@@ -55,7 +55,6 @@ const ProfileScreen = ({ setIsLoggedIn }) => {
         <Text style={styles.userName}>{userData.name || "Người dùng"}</Text>
         <Text style={styles.userEmail}>{userData.email || "email@example.com"}</Text>
       </View>
-      {/* Nút cập nhật hồ sơ trẻ em */}
       <TouchableOpacity style={styles.updateButton} onPress={handleUpdateChildProfile}>
         <Ionicons name="create-outline" size={24} color="#fff" />
         <Text style={styles.updateButtonText}>Cập nhật hồ sơ trẻ em</Text>
