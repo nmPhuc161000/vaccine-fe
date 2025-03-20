@@ -14,8 +14,12 @@ import ServiceScreen from "./screens/ServiceScreen";
 import TeamScreen from "./screens/TeamScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import RegisterScreen from "./screens/RegisterScreen"
+<<<<<<< HEAD
 import { useNavigation } from "@react-navigation/native"; // Import useNavigation
 import UpdateChildProfileScreen from "./screens/UpdateChildProfileScreen";
+=======
+import VacxinList from "./screens/VacxinList"
+>>>>>>> f8afbf37dabcfa2db57058b3fe77982b29f16613
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -149,13 +153,23 @@ const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
         component={TeamScreen}
         options={{ title: "Đội ngũ chuyên gia" }}
       />
+<<<<<<< HEAD
       <Drawer.Screen
         name="Auth"
         options={{ headerShown: false }}
       >
         {() => <AuthStack isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
       </Drawer.Screen>
+=======
+       <Drawer.Screen 
+        name="VacxinList" 
+        component={VacxinList} 
+        options={{ title: "Danh mục vắc xin" }} 
+      />
+>>>>>>> f8afbf37dabcfa2db57058b3fe77982b29f16613
     </Drawer.Navigator>
+    
+    
   );
 };
 
