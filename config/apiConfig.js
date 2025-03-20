@@ -61,28 +61,15 @@ const apiConfig = {
     }
   },
   //appointment
-  async getAppointments(token) {
+  async getAppointments() {
     try {
-      if (!token) {
-        throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại.")
-      }
-
-      const response = await apiClient.get(
-        "/api/appointments/get-appointments",
-        {
-          headers: {
-            "x-auth-token": `Bearer ${token}`,
-          },
-        }
-      )
+      const response = await apiClient.get("/api/appointments/get-appointments")
       return response.data
     } catch (error) {
       console.error("Error details:", error.response || error.message)
       throw new Error(
         "Không thể tải danh sách lịch hẹn: " +
-          (error.response?.data.message ||
-            error.response?.data.msg ||
-            error.message)
+          (error.response?.data.msg || error.message)
       )
     }
   },
