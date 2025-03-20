@@ -14,6 +14,7 @@ import ServiceScreen from "./screens/ServiceScreen";
 import TeamScreen from "./screens/TeamScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import RegisterScreen from "./screens/RegisterScreen"
+import VacxinList from "./screens/VacxinList"
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -114,7 +115,14 @@ const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
         component={TeamScreen} 
         options={{ title: "Đội ngũ chuyên gia" }} 
       />
+       <Drawer.Screen 
+        name="VacxinList" 
+        component={VacxinList} 
+        options={{ title: "Danh mục vắc xin" }} 
+      />
     </Drawer.Navigator>
+    
+    
   );
 };
 
