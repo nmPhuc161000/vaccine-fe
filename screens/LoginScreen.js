@@ -11,6 +11,24 @@ import {
 } from "react-native";
 import apiConfig from "../config/apiConfig"; // Import apiConfig từ folder config
 
+// Hàm giải mã token JWT (không cần thư viện bên ngoài)
+const decodeJWT = (token) => {
+  try {
+    const base64Url = token.split(".")[1]; // Lấy phần payload từ token
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload); // Trả về object đã giải mã
+  } catch (error) {
+    console.error("Lỗi khi giải mã token:", error);
+    return null;
+  }
+};
+
 const LoginScreen = ({ navigation, setIsLoggedIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,8 +53,29 @@ const LoginScreen = ({ navigation, setIsLoggedIn }) => {
     setLoading(true);
     try {
       const response = await apiConfig.login(email, password);
-      await AsyncStorage.setItem("token", response.token); // Lưu token
-      setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập
+      const token = response.token;
+
+      // Lưu token vào AsyncStorage
+      await AsyncStorage.setItem("token", token);
+
+      // Giải mã token để lấy thông tin user
+      const decodedToken = decodeJWT(token);
+      if (!decodedToken || !decodedToken.user) {
+        throw new Error("Token không hợp lệ hoặc không chứa thông tin user");
+      }
+
+      const user = decodedToken.user;
+
+      // Lưu các field của user vào AsyncStorage
+      await AsyncStorage.multiSet([
+        ["userId", user.id],
+        ["userEmail", user.email],
+        ["userName", user.name],
+        ["userRole", user.role],
+      ]);
+
+      // Cập nhật trạng thái đăng nhập
+      setIsLoggedIn(true);
 
       Alert.alert("Thành công", "Đăng nhập thành công!", [
         {
@@ -51,7 +90,7 @@ const LoginScreen = ({ navigation, setIsLoggedIn }) => {
         },
       ]);
     } catch (error) {
-      Alert.alert("Lỗi", error.message);
+      Alert.alert("Lỗi", error.message || "Đăng nhập thất bại");
     } finally {
       setLoading(false);
     }
@@ -86,7 +125,7 @@ const LoginScreen = ({ navigation, setIsLoggedIn }) => {
 
       <Text
         style={styles.link}
-        onPress={() => navigation.navigate("Register")} // Giả sử bạn có màn Register
+        onPress={() => navigation.navigate("Register")}
       >
         Chưa có tài khoản? Đăng ký
       </Text>

@@ -4,8 +4,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { Ionicons } from "@expo/vector-icons";
-
-import HomeScreen from "./screens/HomeSreen"; 
+import { TouchableOpacity } from "react-native";
+import HomeScreen from "./screens/HomeSreen";
 import DetailScreen from "./screens/DetailsScreen";
 import BookingScreen from "./screens/BookingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
@@ -14,6 +14,8 @@ import ServiceScreen from "./screens/ServiceScreen";
 import TeamScreen from "./screens/TeamScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import RegisterScreen from "./screens/RegisterScreen"
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
+import UpdateChildProfileScreen from "./screens/UpdateChildProfileScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -21,7 +23,11 @@ const Drawer = createDrawerNavigator();
 
 const HomeStack = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: true,
+        animation: "fade", // Hiệu ứng chuyển màn hình mờ dần
+      }}>
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -37,28 +43,47 @@ const HomeStack = () => {
         component={RegisterScreen}
         options={{ title: "Đăng ký" }}
       />
+      <Stack.Screen
+        name="UpdateChildProfile"
+        component={UpdateChildProfileScreen}
+        options={{ title: "Cập nhật hồ sơ trẻ em" }}
+      />
     </Stack.Navigator>
   );
 };
 
-const AuthStack = () => {
+const AuthStack = ({ isLoggedIn, setIsLoggedIn }) => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: true,
+        animation: "slide_from_right",
+      }}>
       <Stack.Screen
         name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }} // Ẩn header nếu không cần thiết
-      />
+        options={({ navigation }) => ({
+          title: "Đăng nhập",
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="black" style={{ marginLeft: 10 }} />
+            </TouchableOpacity>
+          ),
+        })}
+      >
+        {(props) => <LoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />}
+      </Stack.Screen>
       <Stack.Screen
         name="Register"
         component={RegisterScreen}
-        options={{ title: "Đăng ký" }} // Hiển thị tiêu đề "Đăng ký"
+        options={{ title: "Đăng ký" }}
       />
     </Stack.Navigator>
   );
 };
 
 const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
+  const navigation = useNavigation();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -68,10 +93,23 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
             Home: "home",
             Booking: "calendar",
             Profile: "person",
-            Login: "log-in",
           };
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
+        tabBarButton: ({ onPress, ...props }) => (
+          <TouchableOpacity
+            {...props}
+            onPress={(e) => {
+              if (route.name === "Home") {
+                onPress(e); // Luôn cho phép điều hướng đến Home
+              } else if (isLoggedIn) {
+                onPress(e); // Điều hướng đến Booking hoặc Profile nếu đã đăng nhập
+              } else {
+                navigation.navigate("Auth", { screen: "Login" }); // Chuyển đến Login nếu chưa đăng nhập
+              }
+            }}
+          />
+        ),
       })}
     >
       <Tab.Screen
@@ -79,18 +117,15 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
         component={HomeStack}
         options={{ headerShown: false }}
       />
-      <Tab.Screen name="Booking" component={BookingScreen} />
-      {isLoggedIn ? (
-        <Tab.Screen
-          name="Profile"
-          children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
-        />
-      ) : (
-        <Tab.Screen
-          name="Login"
-          children={() => <AuthStack />} // Sử dụng AuthStack thay vì LoginScreen
-        />
-      )}
+      <Tab.Screen
+        name="Booking"
+        component={BookingScreen}
+      />
+      <Tab.Screen
+        name="Profile"
+        // Truyền setIsLoggedIn vào ProfileScreen
+        children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
+      />
     </Tab.Navigator>
   );
 };
@@ -98,22 +133,28 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
 const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
   return (
     <Drawer.Navigator>
-      <Drawer.Screen 
-        name="Home" 
+      <Drawer.Screen
+        name="Home"
         options={{ title: "Trang chủ" }}
       >
-        {() => <BottomTabs isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>}
+        {() => <BottomTabs isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
       </Drawer.Screen>
-      <Drawer.Screen 
-        name="ServiceGuide" 
-        component={ServiceScreen} 
-        options={{ title: "Cẩm nang tiêm phòng" }} 
+      <Drawer.Screen
+        name="ServiceGuide"
+        component={ServiceScreen}
+        options={{ title: "Cẩm nang tiêm phòng" }}
       />
-      <Drawer.Screen 
-        name="Team" 
-        component={TeamScreen} 
-        options={{ title: "Đội ngũ chuyên gia" }} 
+      <Drawer.Screen
+        name="Team"
+        component={TeamScreen}
+        options={{ title: "Đội ngũ chuyên gia" }}
       />
+      <Drawer.Screen
+        name="Auth"
+        options={{ headerShown: false }}
+      >
+        {() => <AuthStack isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
+      </Drawer.Screen>
     </Drawer.Navigator>
   );
 };

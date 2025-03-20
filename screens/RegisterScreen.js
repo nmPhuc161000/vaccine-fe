@@ -17,7 +17,7 @@ const RegisterScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Register</Text>
+            <Text style={styles.title}>Đăng Ký</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Name"
