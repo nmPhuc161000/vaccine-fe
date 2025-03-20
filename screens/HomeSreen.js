@@ -25,13 +25,13 @@ const HomeScreen = ({ navigation }) => {
   const headerOpacity = useSharedValue(0);
 
   const services = [
-    { id: '1', title: 'Vaccine Trẻ Em', desc: 'Bảo vệ trẻ từ 0-12 tuổi', image: 'https://via.placeholder.com/300x150' },
+    { id: '1', title: 'Vaccine Trẻ Em', desc: 'Bảo vệ bé từ 0-12 tuổi', image: 'https://via.placeholder.com/300x150' },
     { id: '2', title: 'Vaccine Người Lớn', desc: 'Sức khỏe cho mọi lứa tuổi', image: 'https://via.placeholder.com/300x150' },
     { id: '3', title: 'Tư Vấn Online', desc: 'Hỗ trợ 24/7 từ chuyên gia', image: 'https://via.placeholder.com/300x150' },
   ];
 
   const quickActions = [
-    { id: '1', title: 'Đặt Lịch Nhanh', icon: 'calendar-today', action: () => navigation.navigate('Booking') }, // Changed to 'Booking'
+    { id: '1', title: 'Đặt Lịch Nhanh', icon: 'calendar-today', action: () => navigation.navigate('Booking') },
     { id: '2', title: 'Xem Lịch Sử', icon: 'history', action: () => console.log('View History') },
     { id: '3', title: 'Liên Hệ', icon: 'phone', action: () => console.log('Contact Support') },
   ];
@@ -42,7 +42,7 @@ const HomeScreen = ({ navigation }) => {
       console.log("Data from API:", data);
       if (!Array.isArray(data)) throw new Error("Dữ liệu vaccine không hợp lệ");
       setVaccines(data);
-      setFilteredVaccines(data);
+      setFilteredVaccines(data.slice(0, 3)); // Limit to 3 vaccines initially
       setLoading(false);
       headerOpacity.value = withSpring(1);
     } catch (err) {
@@ -59,12 +59,12 @@ const HomeScreen = ({ navigation }) => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setFilteredVaccines(vaccines);
+      setFilteredVaccines(vaccines.slice(0, 3)); // Reset to 3 vaccines when search is cleared
     } else {
       const filtered = vaccines.filter((vaccine) =>
         vaccine.name.toLowerCase().includes(query.toLowerCase())
       );
-      setFilteredVaccines(filtered);
+      setFilteredVaccines(filtered.slice(0, 3)); // Limit filtered results to 3
     }
   };
 
@@ -90,14 +90,16 @@ const HomeScreen = ({ navigation }) => {
               {item.description || 'Không có mô tả'}
             </Text>
             <View style={styles.vaccineDetails}>
-              <Text style={styles.vaccinePrice}>
-                {item.price ? item.price.toLocaleString() : 'Liên hệ'} VND
-              </Text>
-              <Text style={styles.vaccineAge}>Tuổi: {item.ageRange || 'N/A'}</Text>
+              <View style={styles.vaccineDetailsLeft}>
+                <Text style={styles.vaccineAge}>Tuổi: {item.ageRange || 'N/A'}</Text>
+                <Text style={styles.vaccinePrice}>
+                  {item.price ? item.price.toLocaleString() : 'Liên hệ'} VND
+                </Text>
+              </View>
             </View>
             <TouchableOpacity
               style={styles.bookBtn}
-              onPress={() => navigation.navigate('Booking', { vaccineId: item._id })} // Changed to 'Booking'
+              onPress={() => navigation.navigate('Booking', { vaccineId: item._id })}
             >
               <Text style={styles.bookBtnText}>Đặt lịch</Text>
             </TouchableOpacity>
@@ -121,7 +123,7 @@ const HomeScreen = ({ navigation }) => {
 
   const renderQuickAction = ({ item }) => (
     <TouchableOpacity style={styles.quickActionBtn} onPress={item.action}>
-      <MaterialIcons name={item.icon} size={24} color="#3F51B5" />
+      <MaterialIcons name={item.icon} size={24} color="#FF6F61" />
       <Text style={styles.quickActionText}>{item.title}</Text>
     </TouchableOpacity>
   );
@@ -130,6 +132,16 @@ const HomeScreen = ({ navigation }) => {
     opacity: headerOpacity.value,
     transform: [{ translateY: withSpring(headerOpacity.value * 20 - 20) }],
   }));
+
+  const renderFooter = () => (
+    <TouchableOpacity
+      style={styles.viewMoreBtn}
+      onPress={() => navigation.navigate('VacxinList')}
+    >
+      <Text style={styles.viewMoreText}>Xem thêm vaccine</Text>
+      <MaterialIcons name="arrow-forward" size={20} color="#fff" />
+    </TouchableOpacity>
+  );
 
   const renderHeader = () => (
     <View>
@@ -140,7 +152,7 @@ const HomeScreen = ({ navigation }) => {
             <MaterialIcons name="person" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.headerSubtitle}>Bảo vệ sức khỏe gia đình bạn với các dịch vụ tiêm phòng chuyên nghiệp</Text>
+        <Text style={styles.headerSubtitle}>Bảo vệ sức khỏe gia đình bạn với dịch vụ tiêm phòng tốt nhất!</Text>
         <View style={styles.searchContainer}>
           <MaterialIcons name="search" size={20} color="#757575" style={styles.searchIcon} />
           <TextInput
@@ -193,7 +205,7 @@ const HomeScreen = ({ navigation }) => {
   if (error) {
     return (
       <SafeAreaView style={styles.errorContainer}>
-        <MaterialIcons name="error-outline" size={48} color="#F44336" />
+        <MaterialIcons name="error-outline" size={48} color="#FF6F61" />
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={fetchVaccines}>
           <Text style={styles.retryBtnText}>Thử lại</Text>
@@ -210,6 +222,7 @@ const HomeScreen = ({ navigation }) => {
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -219,14 +232,14 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F2F5',
+    backgroundColor: '#FFF5F1', // Soft pastel background
   },
   header: {
-    backgroundColor: '#3F51B5',
+    backgroundColor: '#FF9AA2', // Playful pinkish-red
     padding: 20,
     paddingTop: 40,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     elevation: 4,
   },
   headerTop: {
@@ -239,17 +252,21 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   profileBtn: {
     padding: 8,
-    backgroundColor: '#5C6BC0',
+    backgroundColor: '#FFB3BA', // Lighter pink
     borderRadius: 20,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#E8EAF6',
+    color: '#fff',
     marginBottom: 16,
     textAlign: 'center',
+    fontStyle: 'italic',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -271,7 +288,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#212121',
+    color: '#FF6F61', // Coral for a playful touch
     marginLeft: 16,
     marginTop: 20,
     marginBottom: 12,
@@ -282,10 +299,12 @@ const styles = StyleSheet.create({
   serviceCard: {
     width: SCREEN_WIDTH * 0.8,
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 20,
     overflow: 'hidden',
-    elevation: 3,
+    elevation: 4,
     marginRight: 16,
+    borderWidth: 2,
+    borderColor: '#FFD1DC', // Soft pink border
   },
   serviceImage: {
     width: '100%',
@@ -296,13 +315,13 @@ const styles = StyleSheet.create({
   },
   serviceTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#212121',
+    fontWeight: '700',
+    color: '#FF6F61', // Matching section title
     marginBottom: 4,
   },
   serviceDesc: {
     fontSize: 14,
-    color: '#757575',
+    color: '#666',
   },
   quickActions: {
     marginBottom: 20,
@@ -314,15 +333,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 15,
     marginRight: 16,
-    elevation: 2,
+    elevation: 3,
     width: 120,
+    borderWidth: 2,
+    borderColor: '#FFD1DC',
   },
   quickActionText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#212121',
+    fontWeight: '600',
+    color: '#FF6F61',
     marginTop: 8,
     textAlign: 'center',
   },
@@ -333,47 +354,53 @@ const styles = StyleSheet.create({
   vaccineCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
     marginBottom: 16,
-    elevation: 2,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#FFD1DC',
   },
   vaccineImage: {
     width: 100,
     height: 100,
-    borderRadius: 8,
+    borderRadius: 15,
     marginRight: 16,
+    borderWidth: 2,
+    borderColor: '#FF9AA2',
   },
   vaccineInfo: {
     flex: 1,
   },
   vaccineName: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#212121',
+    fontWeight: '700',
+    color: '#FF6F61',
     marginBottom: 4,
   },
   vaccineDesc: {
     fontSize: 14,
-    color: '#757575',
+    color: '#666',
     marginBottom: 8,
   },
   vaccineDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  vaccineDetailsLeft: {
+    flexDirection: 'column',
   },
   vaccinePrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#FFB3BA', // Lighter pink for price
+    marginTop: 4,
   },
   vaccineAge: {
     fontSize: 14,
-    color: '#757575',
+    color: '#888',
   },
   bookBtn: {
-    backgroundColor: '#3F51B5',
+    backgroundColor: '#FF9AA2',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -384,11 +411,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  viewMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF9AA2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginVertical: 20,
+    elevation: 2,
+  },
+  viewMoreText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 8,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F2F5',
+    backgroundColor: '#FFF5F1',
   },
   customLoader: {
     padding: 20,
@@ -398,23 +442,23 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#757575',
+    color: '#FF6F61',
     textAlign: 'center',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F2F5',
+    backgroundColor: '#FFF5F1',
   },
   errorText: {
     fontSize: 16,
-    color: '#F44336',
+    color: '#FF6F61',
     marginVertical: 16,
     textAlign: 'center',
   },
   retryBtn: {
-    backgroundColor: '#3F51B5',
+    backgroundColor: '#FF9AA2',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 25,
