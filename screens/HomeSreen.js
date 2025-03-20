@@ -99,7 +99,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
             <TouchableOpacity
               style={styles.bookBtn}
-              onPress={() => navigation.navigate('Booking', { vaccineId: item._id })}
+              onPress={() => navigation.navigate('AddBooking', { vaccineId: item._id })}
             >
               <Text style={styles.bookBtnText}>Đặt lịch</Text>
             </TouchableOpacity>

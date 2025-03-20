@@ -93,7 +93,7 @@ const VacxinList = ({ navigation }) => {
               style={styles.bookButton}
               onPress={() =>
                 navigation.navigate('Home', {
-                  screen: 'Booking',
+                  screen: 'AddBooking',
                   params: { vaccineId: item._id },
                 })
               }
