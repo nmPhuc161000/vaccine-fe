@@ -201,12 +201,12 @@ const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
         component={TeamScreen}
         options={{ title: "Đội ngũ chuyên gia" }}
       />
-      {/* <Drawer.Screen
+      <Drawer.Screen
         name="Auth"
         options={{ headerShown: false }}
       >
         {() => <AuthStack isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
-      </Drawer.Screen> */}
+      </Drawer.Screen>
       <Drawer.Screen
         name="VacxinList"
         component={VacxinList}

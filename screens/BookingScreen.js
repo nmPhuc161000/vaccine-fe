@@ -7,24 +7,36 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from "react-native";
 import apiConfig from "../config/apiConfig";
 import { FlatList } from "react-native-gesture-handler";
 
 const BookingScreen = () => {
   const [appointments, setAppointments] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("all");
+
+  const statusOptions = [
+    { label: "Tất cả", value: "all" },
+    { label: "Chờ xử lý", value: "pending" },
+    { label: "Đã xác nhận", value: "confirmed" },
+    { label: "Hoàn thành", value: "completed" },
+    { label: "Đã hủy", value: "canceled" },
+  ];
 
   const fetchAppointments = async () => {
-    setLoading(true); // Bật loading khi bắt đầu fetch
+    setLoading(true);
     try {
       const data = await apiConfig.getAppointments();
       if (!Array.isArray(data)) throw new Error("Dữ liệu lịch hẹn không hợp lệ");
 
       setAppointments(data);
-      setError(null); // Reset lỗi nếu thành công
+      filterAppointments(data, selectedStatus);
+      setError(null);
     } catch (err) {
       console.error("Error fetching appointments:", err);
       setError(err.message);
@@ -43,7 +55,20 @@ const BookingScreen = () => {
     fetchAppointments();
   };
 
-  // Hàm hủy lịch hẹn
+  const filterAppointments = (data, status) => {
+    if (status === "all") {
+      setFilteredAppointments(data);
+    } else {
+      const filtered = data.filter((item) => item.status === status);
+      setFilteredAppointments(filtered);
+    }
+  };
+
+  const handleStatusFilter = (status) => {
+    setSelectedStatus(status);
+    filterAppointments(appointments, status);
+  };
+
   const handleCancelAppointment = async (appointmentId) => {
     Alert.alert(
       "Xác nhận",
@@ -59,7 +84,7 @@ const BookingScreen = () => {
             try {
               await apiConfig.cancelAppointment(appointmentId);
               Alert.alert("Thành công", "Lịch hẹn đã được hủy!");
-              fetchAppointments(); // Làm mới danh sách sau khi hủy
+              fetchAppointments();
             } catch (err) {
               Alert.alert("Lỗi", err.message || "Hủy lịch hẹn thất bại");
             }
@@ -70,7 +95,6 @@ const BookingScreen = () => {
     );
   };
 
-  // Hàm định dạng thời gian theo UTC
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = String(date.getUTCDate()).padStart(2, "0");
@@ -82,66 +106,93 @@ const BookingScreen = () => {
     return `${day}/${month}/${year}, ${hours}:${minutes}`;
   };
 
-  // Hàm định dạng giá tiền theo VNĐ
   const formatPrice = (price) => {
     return `${price.toLocaleString("vi-VN")} VNĐ`;
   };
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#FF6F61" />
-      ) : error ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : appointments.length === 0 ? (
-        <Text style={styles.noAppointmentsText}>Bạn không có lịch tiêm phòng</Text>
-      ) : (
-        <FlatList
-          data={appointments}
-          keyExtractor={(item) => item._id} // Sử dụng _id của appointment làm key
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.row}>
-                <Text style={styles.label}>Vaccine:</Text>
-                <Text style={styles.value}>{item.vaccineId.name}</Text>
+      {/* Bộ lọc trạng thái */}
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {statusOptions.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.filterButton,
+                selectedStatus === option.value && styles.filterButtonActive,
+              ]}
+              onPress={() => handleStatusFilter(option.value)}
+            >
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  selectedStatus === option.value && styles.filterButtonTextActive,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Nội dung chính */}
+      <View style={styles.contentContainer}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#FF6F61" />
+        ) : error ? (
+          <Text style={styles.error}>{error}</Text>
+        ) : filteredAppointments.length === 0 ? (
+          <Text style={styles.noAppointmentsText}>Không có lịch hẹn nào phù hợp</Text>
+        ) : (
+          <FlatList
+            data={filteredAppointments}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Vaccine:</Text>
+                  <Text style={styles.value}>{item.vaccineId.name}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Giá:</Text>
+                  <Text style={styles.value}>{formatPrice(item.vaccineId.price)}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Trẻ:</Text>
+                  <Text style={styles.value}>{item.childId.name}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Thời gian tiêm:</Text>
+                  <Text style={styles.value}>{formatDate(item.date)}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Trạng thái:</Text>
+                  <Text style={styles.value}>{item.status}</Text>
+                </View>
+                {item.status === "pending" && (
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => handleCancelAppointment(item._id)}
+                  >
+                    <Text style={styles.cancelButtonText}>Hủy lịch hẹn</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Giá:</Text>
-                <Text style={styles.value}>{formatPrice(item.vaccineId.price)}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Trẻ:</Text>
-                <Text style={styles.value}>{item.childId.name}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Thời gian tiêm:</Text>
-                <Text style={styles.value}>{formatDate(item.date)}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Trạng thái:</Text>
-                <Text style={styles.value}>{item.status}</Text>
-              </View>
-              {item.status === "pending" && (
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => handleCancelAppointment(item._id)}
-                >
-                  <Text style={styles.cancelButtonText}>Hủy lịch hẹn</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#FF6F61"]}
-              tintColor="#FF6F61"
-            />
-          }
-        />
-      )}
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#FF6F61"]}
+                tintColor="#FF6F61"
+              />
+            }
+          />
+        )}
+      </View>
     </View>
   );
 };
@@ -149,8 +200,37 @@ const BookingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 8,
     backgroundColor: "#FFF5F1",
+  },
+  filterContainer: {
+    padding: 8,
+    height: 60, // Giới hạn chiều cao của filter
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#FF6F61",
+    marginRight: 8,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  filterButtonActive: {
+    backgroundColor: "#FF6F61",
+  },
+  filterButtonText: {
+    fontSize: 14,
+    color: "#FF6F61",
+  },
+  filterButtonTextActive: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  contentContainer: {
+    flex: 1, // Chiếm toàn bộ không gian còn lại
+    paddingHorizontal: 8,
   },
   card: {
     backgroundColor: "white",
