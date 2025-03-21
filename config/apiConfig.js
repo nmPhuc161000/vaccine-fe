@@ -170,6 +170,22 @@ const apiConfig = {
       throw new Error(`Tạo lịch hẹn thất bại: ${errorMessage}`);
     }
   },
+
+  // Hủy lịch hẹn
+  async cancelAppointment(appointmentId) {
+    try {
+      if (!appointmentId) {
+        throw new Error("ID lịch hẹn không được cung cấp");
+      }
+      const response = await apiClient.put(`/api/appointments/cancel-appointment/${appointmentId}`);
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.msg || error.message || "Lỗi không xác định";
+      console.error("Error in cancelAppointment:", errorMessage);
+      throw new Error(`Hủy lịch hẹn thất bại: ${errorMessage}`);
+    }
+  },
 };
 
 export default apiConfig;

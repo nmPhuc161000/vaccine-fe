@@ -4,7 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, Text } from "react-native";
 import HomeScreen from "./screens/HomeSreen";
 import DetailScreen from "./screens/DetailsScreen";
 import BookingScreen from "./screens/BookingScreen";
@@ -13,12 +13,11 @@ import LoginScreen from "./screens/LoginScreen";
 import ServiceScreen from "./screens/ServiceScreen";
 import TeamScreen from "./screens/TeamScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import RegisterScreen from "./screens/RegisterScreen"
+import RegisterScreen from "./screens/RegisterScreen";
 import { useNavigation } from "@react-navigation/native";
 import UpdateChildProfileScreen from "./screens/UpdateChildProfileScreen";
-import VacxinList from "./screens/VacxinList"
+import VacxinList from "./screens/VacxinList";
 import AddBookingScreen from "./screens/AddBookingScreen";
-
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -29,8 +28,9 @@ const HomeStack = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        animation: "fade", // Hiệu ứng chuyển màn hình mờ dần
-      }}>
+        animation: "fade",
+      }}
+    >
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -66,7 +66,8 @@ const AuthStack = ({ isLoggedIn, setIsLoggedIn }) => {
       screenOptions={{
         headerShown: true,
         animation: "slide_from_right",
-      }}>
+      }}
+    >
       <Stack.Screen
         name="Login"
         options={({ navigation }) => ({
@@ -120,16 +121,28 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
           };
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
+        tabBarLabel: ({ focused, color }) => {
+          const labels = {
+            Home: "Trang chủ",
+            Booking: "Đặt lịch",
+            Profile: "Hồ sơ",
+          };
+          return (
+            <Text style={{ color, fontSize: 12 }}>
+              {labels[route.name]}
+            </Text>
+          );
+        },
         tabBarButton: ({ onPress, ...props }) => (
           <TouchableOpacity
             {...props}
             onPress={(e) => {
               if (route.name === "Home") {
-                onPress(e); // Luôn cho phép điều hướng đến Home
+                onPress(e);
               } else if (isLoggedIn) {
-                onPress(e); // Điều hướng đến Booking hoặc Profile nếu đã đăng nhập
+                onPress(e);
               } else {
-                navigation.navigate("Auth", { screen: "Login" }); // Chuyển đến Login nếu chưa đăng nhập
+                navigation.navigate("Auth", { screen: "Login" });
               }
             }}
           />
@@ -141,24 +154,40 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
         component={HomeStack}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
-        name="Booking"
-        component={BookingScreen}
-      />
+      <Tab.Screen name="Booking" component={BookingScreen} />
       <Tab.Screen
         name="Profile"
-        children={() => <ProfileStack setIsLoggedIn={setIsLoggedIn} />} // Sử dụng ProfileStack thay vì ProfileScreen
+        component={ProfileStack}
+        initialParams={{ setIsLoggedIn }}
       />
     </Tab.Navigator>
   );
 };
 
 const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
+  const navigation = useNavigation();
+
   return (
     <Drawer.Navigator>
       <Drawer.Screen
         name="Home"
         options={{ title: "Trang chủ" }}
+        listeners={{
+          drawerItemPress: () => {
+            // Reset trạng thái về tab Home trong BottomTabs
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: "Home",
+                  state: {
+                    routes: [{ name: "Home" }], // Reset về HomeScreen trong HomeStack
+                  },
+                },
+              ],
+            });
+          },
+        }}
       >
         {() => <BottomTabs isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
       </Drawer.Screen>
@@ -172,21 +201,18 @@ const DrawerNavigator = ({ isLoggedIn, setIsLoggedIn }) => {
         component={TeamScreen}
         options={{ title: "Đội ngũ chuyên gia" }}
       />
-      <Drawer.Screen
+      {/* <Drawer.Screen
         name="Auth"
         options={{ headerShown: false }}
       >
         {() => <AuthStack isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
-      </Drawer.Screen>
-
-       <Drawer.Screen 
-        name="VacxinList" 
-        component={VacxinList} 
-        options={{ title: "Danh mục vắc xin" }} 
+      </Drawer.Screen> */}
+      <Drawer.Screen
+        name="VacxinList"
+        component={VacxinList}
+        options={{ title: "Danh mục vắc xin" }}
       />
     </Drawer.Navigator>
-    
-    
   );
 };
 
