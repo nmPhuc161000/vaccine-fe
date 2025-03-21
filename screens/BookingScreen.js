@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,47 +8,43 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  FlatList,
 } from "react-native";
 import apiConfig from "../config/apiConfig";
-import { FlatList } from "react-native-gesture-handler";
+
+const statusOptions = [
+  { label: "Tất cả", value: "all" },
+  { label: "Chờ xử lý", value: "pending" },
+  { label: "Đã xác nhận", value: "confirmed" },
+  { label: "Hoàn thành", value: "completed" },
+  { label: "Đã hủy", value: "canceled" },
+];
 
 const BookingScreen = () => {
   const [appointments, setAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  const statusOptions = [
-    { label: "Tất cả", value: "all" },
-    { label: "Chờ xử lý", value: "pending" },
-    { label: "Đã xác nhận", value: "confirmed" },
-    { label: "Hoàn thành", value: "completed" },
-    { label: "Đã hủy", value: "canceled" },
-  ];
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     setLoading(true);
     try {
       const data = await apiConfig.getAppointments();
       if (!Array.isArray(data)) throw new Error("Dữ liệu lịch hẹn không hợp lệ");
-
       setAppointments(data);
       filterAppointments(data, selectedStatus);
-      setError(null);
     } catch (err) {
-      console.error("Error fetching appointments:", err);
-      setError(err.message);
+      Alert.alert("Lỗi", err.message || "Không thể tải dữ liệu");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [selectedStatus]);
 
   useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [fetchAppointments]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -56,12 +52,7 @@ const BookingScreen = () => {
   };
 
   const filterAppointments = (data, status) => {
-    if (status === "all") {
-      setFilteredAppointments(data);
-    } else {
-      const filtered = data.filter((item) => item.status === status);
-      setFilteredAppointments(filtered);
-    }
+    setFilteredAppointments(status === "all" ? data : data.filter((item) => item.status === status));
   };
 
   const handleStatusFilter = (status) => {
@@ -70,142 +61,106 @@ const BookingScreen = () => {
   };
 
   const handleCancelAppointment = async (appointmentId) => {
-    Alert.alert(
-      "Xác nhận",
-      "Bạn có chắc muốn hủy lịch hẹn này?",
-      [
-        {
-          text: "Hủy",
-          style: "cancel",
+    Alert.alert("Xác nhận", "Bạn có chắc muốn hủy lịch hẹn này?", [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Đồng ý",
+        onPress: async () => {
+          try {
+            await apiConfig.cancelAppointment(appointmentId);
+            Alert.alert("Thành công", "Lịch hẹn đã được hủy!");
+            fetchAppointments();
+          } catch (err) {
+            Alert.alert("Lỗi", err.message || "Hủy lịch hẹn thất bại");
+          }
         },
-        {
-          text: "Đồng ý",
-          onPress: async () => {
-            try {
-              await apiConfig.cancelAppointment(appointmentId);
-              Alert.alert("Thành công", "Lịch hẹn đã được hủy!");
-              fetchAppointments();
-            } catch (err) {
-              Alert.alert("Lỗi", err.message || "Hủy lịch hẹn thất bại");
-            }
-          },
-        },
-      ],
-      { cancelable: false }
-    );
+      },
+    ]);
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const day = String(date.getUTCDate()).padStart(2, "0");
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const year = date.getUTCFullYear();
-    const hours = String(date.getUTCHours()).padStart(2, "0");
-    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-
-    return `${day}/${month}/${year}, ${hours}:${minutes}`;
+    return date.toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const formatPrice = (price) => {
-    return `${price.toLocaleString("vi-VN")} VNĐ`;
+  const formatPrice = (price) => `${price.toLocaleString("vi-VN")} VNĐ`;
+
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      {[
+        { label: "Vaccine", value: item.vaccineId.name },
+        { label: "Giá", value: formatPrice(item.vaccineId.price) },
+        { label: "Trẻ", value: item.childId.name },
+        { label: "Thời gian tiêm", value: formatDate(item.date) },
+        { label: "Trạng thái", value: item.status },
+      ].map((field, index) => (
+        <View style={styles.row} key={index}>
+          <Text style={styles.label}>{field.label}:</Text>
+          <Text style={styles.value}>{field.value}</Text>
+        </View>
+      ))}
+      {item.status === "pending" && (
+        <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelAppointment(item._id)}>
+          <Text style={styles.cancelButtonText}>Hủy lịch hẹn</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderEmptyComponent = () => {
+    if (loading)
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6F61" />
+        </View>
+      );
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.noAppointmentsText}>Không có lịch hẹn nào phù hợp</Text>
+      </View>
+    );
   };
 
   return (
-    <View style={styles.container}>
-      {/* Bộ lọc trạng thái */}
-      <View style={styles.filterContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <FlatList
+      ListHeaderComponent={
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           {statusOptions.map((option) => (
             <TouchableOpacity
               key={option.value}
-              style={[
-                styles.filterButton,
-                selectedStatus === option.value && styles.filterButtonActive,
-              ]}
+              style={[styles.filterButton, selectedStatus === option.value && styles.filterButtonActive]}
               onPress={() => handleStatusFilter(option.value)}
             >
               <Text
-                style={[
-                  styles.filterButtonText,
-                  selectedStatus === option.value && styles.filterButtonTextActive,
-                ]}
+                style={[styles.filterButtonText, selectedStatus === option.value && styles.filterButtonTextActive]}
               >
                 {option.label}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </View>
-
-      {/* Nội dung chính */}
-      <View style={styles.contentContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#FF6F61" />
-        ) : error ? (
-          <Text style={styles.error}>{error}</Text>
-        ) : filteredAppointments.length === 0 ? (
-          <Text style={styles.noAppointmentsText}>Không có lịch hẹn nào phù hợp</Text>
-        ) : (
-          <FlatList
-            data={filteredAppointments}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Vaccine:</Text>
-                  <Text style={styles.value}>{item.vaccineId.name}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Giá:</Text>
-                  <Text style={styles.value}>{formatPrice(item.vaccineId.price)}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Trẻ:</Text>
-                  <Text style={styles.value}>{item.childId.name}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Thời gian tiêm:</Text>
-                  <Text style={styles.value}>{formatDate(item.date)}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Trạng thái:</Text>
-                  <Text style={styles.value}>{item.status}</Text>
-                </View>
-                {item.status === "pending" && (
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => handleCancelAppointment(item._id)}
-                  >
-                    <Text style={styles.cancelButtonText}>Hủy lịch hẹn</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={["#FF6F61"]}
-                tintColor="#FF6F61"
-              />
-            }
-          />
-        )}
-      </View>
-    </View>
+      }
+      data={filteredAppointments}
+      keyExtractor={(item) => item._id}
+      renderItem={renderItem}
+      ListEmptyComponent={renderEmptyComponent}
+      ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6F61"]} />}
+      contentContainerStyle={styles.flatListContent}
+      style={styles.container}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF5F1",
-  },
-  filterContainer: {
-    padding: 8,
-    height: 60, // Giới hạn chiều cao của filter
-  },
+  container: { flex: 1, backgroundColor: "#FFF5F1" },
+  filterContainer: { padding: 8, height: 60 },
   filterButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -214,71 +169,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#FF6F61",
     marginRight: 8,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: "center", // Căn giữa ngang
+    justifyContent: "center", // Căn giữa dọc
+    minWidth: 90, // Đảm bảo kích thước đồng đều
+    height: 40, // Thiết lập chiều cao cố định
   },
-  filterButtonActive: {
-    backgroundColor: "#FF6F61",
-  },
+  filterButtonActive: { backgroundColor: "#FF6F61" },
   filterButtonText: {
     fontSize: 14,
     color: "#FF6F61",
-  },
-  filterButtonTextActive: {
-    color: "#fff",
     fontWeight: "600",
+    textAlign: "center", // Căn giữa văn bản
   },
-  contentContainer: {
-    flex: 1, // Chiếm toàn bộ không gian còn lại
-    paddingHorizontal: 8,
-  },
-  card: {
-    backgroundColor: "white",
-    borderWidth: 2,
-    borderColor: "#FFD1DC",
-    padding: 16,
-    borderRadius: 20,
-    elevation: 4,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FF6F61",
-  },
-  value: {
-    fontSize: 14,
-    color: "#666",
-  },
-  error: {
-    fontSize: 16,
-    color: "#FF6F61",
-    textAlign: "center",
-    marginVertical: 16,
-  },
-  noAppointmentsText: {
-    fontSize: 16,
-    color: "#FF6F61",
-    textAlign: "center",
-    marginVertical: 16,
-  },
-  cancelButton: {
-    backgroundColor: "#FF6F61",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    alignSelf: "flex-end",
-    marginTop: 8,
-  },
-  cancelButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
+  filterButtonTextActive: { color: "#fff", fontWeight: "600" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", minHeight: 200 },
+  card: { backgroundColor: "white", borderWidth: 2, borderColor: "#FFD1DC", padding: 16, borderRadius: 20, elevation: 4 },
+  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: "600", color: "#FF6F61" },
+  value: { fontSize: 14, color: "#666" },
+  noAppointmentsText: { fontSize: 16, color: "#FF6F61", textAlign: "center", marginVertical: 16 },
+  cancelButton: { backgroundColor: "#FF6F61", paddingVertical: 8, paddingHorizontal: 16, borderRadius: 10, alignSelf: "flex-end", marginTop: 8 },
+  cancelButtonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  flatListContent: { paddingHorizontal: 8, paddingBottom: 16, flexGrow: 1 },
 });
 
 export default BookingScreen;

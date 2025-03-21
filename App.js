@@ -18,6 +18,7 @@ import { useNavigation } from "@react-navigation/native";
 import UpdateChildProfileScreen from "./screens/UpdateChildProfileScreen";
 import VacxinList from "./screens/VacxinList";
 import AddBookingScreen from "./screens/AddBookingScreen";
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -39,7 +40,7 @@ const HomeStack = () => {
       <Stack.Screen
         name="DetailScreen"
         component={DetailScreen}
-        options={{ title: "Chi tiết" }}
+        options={{ title: "Chi tiết", tabBarStyle: { display: "none" } }}
       />
       <Stack.Screen
         name="Register"
@@ -152,8 +153,14 @@ const BottomTabs = ({ isLoggedIn, setIsLoggedIn }) => {
       <Tab.Screen
         name="Home"
         component={HomeStack}
-        options={{ headerShown: false }}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
+          return {
+            tabBarStyle: routeName === 'DetailScreen' ? { display: 'none' } : {},
+          };
+        }}
       />
+
       <Tab.Screen name="Booking" component={BookingScreen} />
       <Tab.Screen
         name="Profile"
